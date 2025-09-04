@@ -4,7 +4,7 @@ pipeline {
     tools {
         // Jenkins will now automatically use the correct 'Default' tool
         // for the OS it's currently running on.
-        git 'Default'
+        git 'Linux-Git'
     }
 
     stages {
