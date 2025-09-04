@@ -1,35 +1,34 @@
-pipeline{
-    agent { label 'dev-server' }
+pipeline {
+    agent { label 'MyAgent1' }
+
+    tools {
+        // Jenkins will now automatically use the correct 'Default' tool
+        // for the OS it's currently running on.
+        git 'Default'
+    }
+
+    stages {
+        stage('Clone Repository') {
+            steps {
+                // This step will now run successfully on your Ubuntu agent
+                echo "Checking out code on agent..."
+                checkout scm
+            }
+        }
+
+        stage('Verify Clone on Agent') {
+            steps {
+                sh 'echo "--- Running on Agent ---"'
+                sh 'whoami'
+                sh 'ls -la'
+                sh 'git --version'
+            }
+        }
+    }
     
-    stages{
-        stage("Code Clone"){
-            steps{
-                echo "Code Clone Stage"
-                git url: "https://github.com/LondheShubham153/node-todo-cicd.git", branch: "master"
-            }
-        }
-        stage("Code Build & Test"){
-            steps{
-                echo "Code Build Stage"
-                sh "docker build -t node-app ."
-            }
-        }
-        stage("Push To DockerHub"){
-            steps{
-                withCredentials([usernamePassword(
-                    credentialsId:"dockerHubCreds",
-                    usernameVariable:"dockerHubUser", 
-                    passwordVariable:"dockerHubPass")]){
-                sh 'echo $dockerHubPass | docker login -u $dockerHubUser --password-stdin'
-                sh "docker image tag node-app:latest ${env.dockerHubUser}/node-app:latest"
-                sh "docker push ${env.dockerHubUser}/node-app:latest"
-                }
-            }
-        }
-        stage("Deploy"){
-            steps{
-                sh "docker compose down && docker compose up -d --build"
-            }
+    post {
+        always {
+            cleanWs()
         }
     }
 }
